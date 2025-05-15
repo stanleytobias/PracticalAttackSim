@@ -1,5 +1,8 @@
 #This is a test to detect data exfil using PowerShell, with no external binary execution
 #T1041 - Exfiltration Over C2 Channel
+#Usage: Edit the variables and execute the script via Powershell
+#ex: .\Your-saved-filename-for-this-test.ps1
+#Check the $LogFile for the status of the exfil, it should show how many files were collected
 
 # Configuration variables (valid PowerShell variable names)
 $DataDir = "C:\TestData"  # Directory containing files to exfiltrate
