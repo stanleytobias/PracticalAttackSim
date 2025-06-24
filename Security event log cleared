@@ -1,29 +1,3 @@
-Powershell Script:
-
-$logName = "Application"
-$source = "FakeSecurityEvent"
-$eventID = 91102  # Use a fake ID to avoid conflict
-$message = @"
-Audit log was cleared.
-Subject:
-    Security ID:        S-1-5-21-0000000000-0000000000-0000000000-500
-    Account Name:       Administrator
-    Account Domain:     WINLAB
-    Logon ID:           0x3e7
-"@
-
-# Register source if needed
-if (-not [System.Diagnostics.EventLog]::SourceExists($source)) {
-    New-EventLog -LogName $logName -Source $source
-}
-
-# Write fake event
-Write-EventLog -LogName $logName -Source $source -EventID $eventID -EntryType Information -Message $message
-
-Write-Host "Simulated fake 1102-like event (ID 91102) written to Application log."
-
-
-
 Clear actual log:
 PS wevtutil cl Security
 
