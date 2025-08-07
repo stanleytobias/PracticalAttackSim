@@ -112,3 +112,41 @@ foreach ($file in $files) {
 }
 
 Write-Log "Exfiltration simulation completed"
+
+#############################################################
+KQL Query:
+
+let SuspiciousProcesses = DeviceProcessEvents
+    | where FolderPath has @"\AppData\Local\Temp"
+    | project DeviceId, InitiatingProcessId = ProcessId, InitiatingProcessStartTime = Timestamp, FileName, FolderPath;
+DeviceNetworkEvents
+| where RemoteUrl !endswith ".local" and RemoteIPType == "Public"
+| join kind=inner (
+    SuspiciousProcesses
+) on DeviceId, InitiatingProcessId
+| project Timestamp, DeviceName, InitiatingProcessFileName=FileName, FolderPath, RemoteIP, RemotePort, RemoteUrl, Protocol
+
+#############################################################
+
+PowerShell:
+Supposed executable that reaches out to a public server externally, in this case, example.com.
+
+$tempPath = "$env:TEMP\stanley.exe"
+
+# Simple downloader logic using PowerShell to create a fake executable
+$code = @"
+using System;
+using System.Net;
+
+public class Program {
+    public static void Main() {
+        using(WebClient wc = new WebClient()) {
+            wc.DownloadString("http://93.184.216.34"); // Example IP (example.com)
+        }
+    }
+}
+"@
+
+Add-Type -TypeDefinition $code -OutputAssembly $tempPath -OutputType ConsoleApplication
+
+Start-Process -FilePath $tempPath
