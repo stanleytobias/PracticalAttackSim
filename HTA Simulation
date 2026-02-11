@@ -1,0 +1,106 @@
+This is a simulation for an HTA file.
+
+<!doctype html>
+<html>
+<head>
+  <title>Simulation — Security Awareness</title>
+
+  <hta:application
+    id="simApp"
+    applicationname="Simulation"
+    border="thin"
+    caption="yes"
+    contextmenu="no"
+    maximizebutton="no"
+    minimizebutton="yes"
+    navigable="no"
+    scroll="no"
+    selection="no"
+    singleinstance="yes"
+    sysmenu="yes"
+    windowstate="normal"
+  />
+
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <style>
+    body { font-family: Segoe UI, Arial, sans-serif; margin: 0; background: #0b1220; color: #e7eefc; }
+    .wrap { padding: 18px; }
+    .card { background:#121b2f; border:1px solid #233055; border-radius:12px; padding:16px; }
+    .badge { display:inline-block; padding:6px 10px; border-radius:999px; background:#22335f; border:1px solid #2f4583; }
+    h1 { margin:12px 0 6px; font-size:18px; }
+    p { margin:8px 0; line-height:1.4; color:#cdd8f5; }
+    .row { display:flex; gap:10px; margin-top:14px; }
+    button {
+      background:#2b6cff; border:0; color:white; padding:10px 12px; border-radius:10px;
+      cursor:pointer; font-weight:600;
+    }
+    button.secondary { background:#22335f; border:1px solid #2f4583; }
+    .small { font-size:12px; opacity:0.85; margin-top:10px; }
+    .log { margin-top:10px; font-family: Consolas, monospace; font-size:12px; color:#a9b9ea; white-space:pre-wrap; }
+  </style>
+
+  <script type="text/javascript">
+    function nowISO() {
+      var d = new Date();
+      function p(n){ return (n<10?'0':'')+n; }
+      return d.getFullYear()+"-"+p(d.getMonth()+1)+"-"+p(d.getDate())+" "+p(d.getHours())+":"+p(d.getMinutes())+":"+p(d.getSeconds());
+    }
+
+    function addLog(msg){
+      var el = document.getElementById("log");
+      el.textContent = ("[" + nowISO() + "] " + msg + "\n") + el.textContent;
+    }
+
+    function setStatus(text){
+      document.getElementById("status").textContent = text;
+    }
+
+    function acknowledge(){
+      addLog("User clicked: Acknowledge");
+      setStatus("Acknowledged. (Simulation only)");
+    }
+
+    function learnMore(){
+      addLog("User clicked: Learn More");
+      setStatus("Opening training page…");
+      // Safe: only opens a page. Replace with your internal training URL if you want.
+      window.open("about:blank", "_blank");
+    }
+
+    function closeApp(){
+      addLog("User clicked: Close");
+      window.close();
+    }
+
+    window.onload = function(){
+      addLog("HTA opened (UI-only simulation).");
+      setStatus("Waiting for user action…");
+    };
+  </script>
+</head>
+
+<body>
+  <div class="wrap">
+    <div class="card">
+      <span class="badge">SIMULATION • Security Awareness</span>
+      <h1>Suspicious Activity Detected (Training)</h1>
+      <p>
+        This is a <b>safe simulation</b> used for awareness/testing. It does not run commands, install anything,
+        or change your system.
+      </p>
+      <p>
+        Goal: verify users can identify and respond to suspicious prompts.
+      </p>
+
+      <div class="row">
+        <button onclick="acknowledge()">Acknowledge</button>
+        <button class="secondary" onclick="learnMore()">Learn More</button>
+        <button class="secondary" onclick="closeApp()">Close</button>
+      </div>
+
+      <div class="small">Status: <span id="status"></span></div>
+      <div class="log" id="log"></div>
+    </div>
+  </div>
+</body>
+</html>
